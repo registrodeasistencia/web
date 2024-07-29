@@ -1,6 +1,7 @@
+/* styles.css */
 body {
     font-family: Arial, sans-serif;
-    background-color: #fcfcfc; /* Color de fondo de la página */
+    background-color: #fafafa; /* Color de fondo de la página */
     margin: 0;
     padding: 20px;
 }
@@ -8,15 +9,16 @@ body {
 h1 {
     text-align: center;
     color: #1e1e1e; /* Color del texto del título */
+    padding: 30px; /* Ajusta el padding para las celdas */
 }
 
 .table-responsive {
-    max-width: 100%; /* Limita el ancho máximo al contenedor */
+    /*max-width: 100%; /* Limita el ancho máximo al contenedor */
     overflow-x: auto; /* Permite el desplazamiento horizontal si es necesario */
 }
 
 table {
-    width: 100%;
+    width: 100%; /* Ajusta el ancho de la tabla al 100% del contenedor */
     border-collapse: collapse;
     font-size: 0.9em; /* Ajusta el tamaño de la fuente */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra de la tabla */
@@ -29,31 +31,27 @@ table {
 th, td {
     padding: 8px; /* Ajusta el padding para las celdas */
     text-align: left;
-    white-space: nowrap; /* Evita que el texto se ajuste en varias líneas */
     overflow: hidden; /* Oculta el texto desbordado */
     text-overflow: ellipsis; /* Agrega puntos suspensivos para texto largo */
 }
 
 thead th {
-    background-color: #21225e; /* Color del encabezado */
+    background-color: #0e3d5e; /* Color del encabezado */
     color: white;
     font-size: 0.9em; /* Ajusta el tamaño de la fuente en el encabezado */
 }
 
 tbody tr:nth-of-type(even) {
-    background-color: #ffffff; /* Color de fila par */
+    background-color: #dfdfdf; /* Color de fila par */
 }
 
 tbody tr:nth-of-type(odd) {
-    background-color: #f8f8f8; /* Color de fila impar */
-}
-
-tbody tr:hover {
-    background-color: rgb(101, 120, 155); /* Color de fila al pasar el ratón */
+    background-color: #f3f3f3; /* Color de fila impar */
 }
 
 .table-hover tbody tr:hover {
-    background-color: #e9ecef; /* Color al pasar el ratón */
+    background-color: #1b5a7fc7; /* Color al pasar el ratón */
+    color: white; /* Color del texto */
 }
 
 /* Media queries para dispositivos más pequeños */
@@ -61,13 +59,30 @@ tbody tr:hover {
     th, td {
         padding: 6px; /* Reduce el padding en pantallas pequeñas */
     }
-    
+
     table {
         font-size: 0.8em; /* Ajusta el tamaño de la fuente en pantallas pequeñas */
     }
 }
 
-/* styles.css */
 .custom-container {
-    max-width: 80%;
+    max-width: 90%;
+}
+
+.btn-custom {
+    background-color: #0e3d5e; /* Color de fondo personalizado */
+    color: white; /* Color del texto */
+    border: none; /* Sin borde */
+    transition: background-color 0.3s ease; /* Transición suave para el cambio de color de fondo */
+}
+
+.btn-custom:hover {
+    background-color: #1b5b7f; /* Color de fondo al pasar el ratón */
+    color: white; /* Color del texto */
+}
+
+/* Clase para evitar recortes en dispositivos móviles */
+table {
+    table-layout: auto; /* Ajusta el diseño de la tabla automáticamente */
+    width: 100%; /* Asegura que la tabla ocupe todo el ancho disponible */
 }

@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterEstado = document.getElementById('filterEstado');
     const filterCarrera = document.getElementById('filterCarrera');
     const searchInput = document.getElementById('searchInput');
-    const printButton = document.getElementById('printButton');
+    const downloadButton = document.getElementById('downloadButton');
 
     let allData = [];
 
@@ -59,71 +59,42 @@ document.addEventListener('DOMContentLoaded', function() {
                     return matchName && matchEstado && matchCarrera;
                 });
 
-                filteredAlumnos.forEach(userData => {
+                filteredAlumnos.forEach((alumno) => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${userData.nombre}</td>
-                        <td>${userData.carrera}</td>
-                        <td>${userData.institucion}</td>
-                        <td class="estado ${userData.estado.toLowerCase()}">${userData.estado}</td>
+                        <td>${alumno.nombre}</td>
+                        <td>${alumno.carrera}</td>
+                        <td>${alumno.institucion}</td>
+                        <td>${alumno.estado}</td>
                     `;
-
-                    // Agregar clases para color de estado
-                    const estadoCell = row.querySelector('.estado');
-                    if (userData.estado === 'Presente') {
-                        estadoCell.classList.add('table-success');
-                    } else if (userData.estado === 'Ausente') {
-                        estadoCell.classList.add('table-danger');
-                    }
-
                     tableBody.appendChild(row);
                 });
             };
 
-            // Filtrar y mostrar datos al cambiar el filtro o al buscar
             filterEstado.addEventListener('change', filterAndDisplay);
             filterCarrera.addEventListener('change', filterAndDisplay);
             searchInput.addEventListener('input', filterAndDisplay);
 
-            // Inicialmente mostrar todos los datos
             filterAndDisplay();
         } else {
             console.log("No data available");
         }
     }).catch((error) => {
-        console.error("Error fetching data: ", error);
+        console.error(error);
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const printButton = document.getElementById('printButton');
-        const table = document.getElementById('asistenciaTable');
-        
-        printButton.addEventListener('click', () => {
-            const { jsPDF } = window.jspdf;
-            
-            // Usa html2canvas para convertir la tabla a una imagen
-            html2canvas(table).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF();
-                const imgWidth = 210; // Ancho de la página en mm
-                const pageHeight = 295; // Alto de la página en mm
-                const imgHeight = canvas.height * imgWidth / canvas.width;
-                let heightLeft = imgHeight;
-                
-                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-                
-                while (heightLeft >= 0) {
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, -heightLeft, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                }
-                
-                pdf.save('asistencia.pdf');
-            }).catch(error => {
-                console.error('Error al generar el PDF:', error);
-            });
+    downloadButton.addEventListener('click', () => {
+        const { jsPDF } = window.jspdf;
+
+        html2canvas(document.querySelector("#asistenciaTable")).then(canvas => {
+            const pdf = new jsPDF('p', 'pt', 'a4');
+            const imgData = canvas.toDataURL('image/png');
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save("tabla_asistencia.pdf");
         });
     });
-    
 });
