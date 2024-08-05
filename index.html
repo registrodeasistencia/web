@@ -33,13 +33,20 @@
                         <option value="Todas">Todas</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label for="filterInstitucion">Institución:</label>
+                    <select id="filterInstitucion" class="form-control">
+                        <option value="Todas">Todas</option>
+                    </select>
+                </div>
                 <div>
-                    <button id="downloadButton" class="btn btn-custom">Descargar PDF</button>
+                    <button id="downloadButton" class="btn btn-custom" disabled>Descargar PDF</button>
+                    <button id="refreshButton" class="btn btn-custom ml-2">Actualizar</button>       
                 </div>
             </div>
             <div class="col-md-9">
-                <div class="table-responsive">
-                    <input id="searchInput" type="text" class="form-control mb-3" placeholder="Buscar por nombre...">
+                <input id="searchInput" type="text" class="form-control mb-3" placeholder="Buscar por nombre...">
+                <div class="table-wrapper">
                     <table id="asistenciaTable" class="table table-hover">
                         <thead>
                             <tr>
