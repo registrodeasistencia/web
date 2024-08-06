@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const refreshButton = document.getElementById('refreshButton');
 
     let allData = [];
+    let filteredData = [];
 
     get(ref(database, 'asistenciaAlumnos')).then((snapshot) => {
         if (snapshot.exists()) {
@@ -63,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const carreraFilter = filterCarrera.value;
                 const institucionFilter = filterInstitucion.value;
 
-                const filteredAlumnos = alumnos.filter(alumno => {
+                filteredData = alumnos.filter(alumno => {
                     const matchName = alumno.nombre.toLowerCase().includes(searchText);
                     const matchEstado = estadoFilter === 'Todos' || alumno.estado === estadoFilter;
                     const matchCarrera = carreraFilter === 'Todas' || alumno.carrera === carreraFilter;
@@ -71,13 +72,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     return matchName && matchEstado && matchCarrera && matchInstitucion;
                 });
 
-                if (filteredAlumnos.length === 0) {
+                if (filteredData.length === 0) {
                     const row = document.createElement('tr');
-                    row.innerHTML = `<td colspan="4" class="text-center">No hay usuarios registrados</td>`;
+                    row.innerHTML = `<td colspan="5" class="text-center">No hay datos importados.</td>`;
                     tableBody.appendChild(row);
                     downloadButton.disabled = true; // Deshabilitar el botón si no hay datos
                 } else {
-                    filteredAlumnos.forEach((alumno) => {
+                    filteredData.forEach((alumno) => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${alumno.nombre}</td>
@@ -101,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
             filterAndDisplay();
         } else {
             const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="4" class="text-center">No hay datos importados en ASISTAP</td>`;
+            row.innerHTML = `<td colspan="5" class="text-center">No hay datos importados.</td>`;
             tableBody.appendChild(row);
             downloadButton.disabled = true; // Deshabilitar el botón si no hay datos
         }
@@ -114,16 +115,37 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     downloadButton.addEventListener('click', async () => {
-        const table = document.getElementById("asistenciaTable");
-        const wb = XLSX.utils.table_to_book(table);
+        const wb = XLSX.utils.book_new();
+
+        // Crear una hoja de trabajo con los datos de la tabla
+        const wsData = [
+            ["RUT", "Nombre", "Carrera", "Institución", "Estado"]
+        ];
+
+        filteredData.forEach(alumno => {
+            wsData.push([alumno.rut, alumno.nombre, alumno.carrera, alumno.institucion, alumno.estado]);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+        // Ajustar celdas al texto
+        const cols = [
+            { wch: 15 },
+            { wch: 40 },
+            { wch: 50 },
+            { wch: 10 },
+            { wch: 10 }
+        ];
+        ws['!cols'] = cols;
+
+        XLSX.utils.book_append_sheet(wb, ws, "Asistencia");
 
         // Obtener los valores de los filtros
         const estadoFilter = filterEstado.value;
         const carreraFilter = filterCarrera.value;
-        const institucionFilter = filterInstitucion.value;
 
         // Crear el nombre del archivo basado en los filtros seleccionados
-        const fileName = `tabla_asistencia_${estadoFilter}_${carreraFilter}_${institucionFilter}.xlsx`.replace(/ /g, '_');
+        const fileName = `RegistroAsistencia_${estadoFilter}_Carrera${carreraFilter}.xlsx`.replace(/ /g, '_');
 
         // Pedir al usuario seleccionar la ubicación para guardar el archivo
         const opts = {
