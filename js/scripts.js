@@ -71,18 +71,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     return matchName && matchEstado && matchCarrera && matchInstitucion;
                 });
 
-                filteredAlumnos.forEach((alumno) => {
+                if (filteredAlumnos.length === 0) {
                     const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${alumno.nombre}</td>
-                        <td>${alumno.carrera}</td>
-                        <td>${alumno.institucion}</td>
-                        <td class="${alumno.estado === 'Presente' ? 'estado-presente' : alumno.estado === 'Ausente' ? 'estado-ausente' : ''}">
-                            ${alumno.estado}
-                        </td>
-                    `;
+                    row.innerHTML = `<td colspan="4" class="text-center">No hay usuarios registrados</td>`;
                     tableBody.appendChild(row);
-                });
+                    downloadButton.disabled = true; // Deshabilitar el botón si no hay datos
+                } else {
+                    filteredAlumnos.forEach((alumno) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${alumno.nombre}</td>
+                            <td>${alumno.carrera}</td>
+                            <td>${alumno.institucion}</td>
+                            <td class="${alumno.estado === 'Presente' ? 'estado-presente' : alumno.estado === 'Ausente' ? 'estado-ausente' : ''}">
+                                ${alumno.estado}
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                    downloadButton.disabled = false; // Habilitar el botón si hay datos
+                }
             };
 
             filterEstado.addEventListener('change', filterAndDisplay);
@@ -92,7 +100,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             filterAndDisplay();
         } else {
-            console.log("No data available");
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="4" class="text-center">No hay datos importados en ASISTAP</td>`;
+            tableBody.appendChild(row);
+            downloadButton.disabled = true; // Deshabilitar el botón si no hay datos
         }
     }).catch((error) => {
         console.error(error);
@@ -102,19 +113,36 @@ document.addEventListener('DOMContentLoaded', function() {
         location.reload();
     });
 
-    downloadButton.addEventListener('click', () => {
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'pt', 'a4');
+    downloadButton.addEventListener('click', async () => {
         const table = document.getElementById("asistenciaTable");
+        const wb = XLSX.utils.table_to_book(table);
 
-        pdf.html(table, {
-            callback: function (pdf) {
-                pdf.save("tabla_asistencia.pdf");
-            },
-            margin: [10, 10, 10, 10],
-            autoPaging: 'text',
-            width: 500,
-            windowWidth: 650
-        });
+        // Obtener los valores de los filtros
+        const estadoFilter = filterEstado.value;
+        const carreraFilter = filterCarrera.value;
+        const institucionFilter = filterInstitucion.value;
+
+        // Crear el nombre del archivo basado en los filtros seleccionados
+        const fileName = `tabla_asistencia_${estadoFilter}_${carreraFilter}_${institucionFilter}.xlsx`.replace(/ /g, '_');
+
+        // Pedir al usuario seleccionar la ubicación para guardar el archivo
+        const opts = {
+            types: [{
+                description: 'Excel Files',
+                accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] },
+            }],
+            suggestedName: fileName,
+        };
+
+        try {
+            const handle = await window.showSaveFilePicker(opts);
+            const writableStream = await handle.createWritable();
+            const workbookBlob = new Blob([XLSX.write(wb, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+            await writableStream.write(workbookBlob);
+            await writableStream.close();
+        } catch (err) {
+            console.error('Error saving file:', err);
+        }
     });
 });
