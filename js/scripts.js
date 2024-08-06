@@ -23,20 +23,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     const downloadButton = document.getElementById('downloadButton');
     const refreshButton = document.getElementById('refreshButton');
+    const totalRegistered = document.getElementById('totalRegistered');
+    const totalPresent = document.getElementById('totalPresent');
+    const totalAbsent = document.getElementById('totalAbsent');
 
     let allData = [];
     let filteredData = [];
+    let presentCount = 0;
+    let absentCount = 0;
 
     get(ref(database, 'asistenciaAlumnos')).then((snapshot) => {
         if (snapshot.exists()) {
             const carrerasSet = new Set();
             const institucionesSet = new Set();
             const alumnos = [];
+
             snapshot.forEach((childSnapshot) => {
                 const userData = childSnapshot.val();
                 alumnos.push(userData);
                 carrerasSet.add(userData.carrera);
                 institucionesSet.add(userData.institucion);
+
+                if (userData.estado === 'Presente') {
+                    presentCount++;
+                } else if (userData.estado === 'Ausente') {
+                    absentCount++;
+                }
             });
 
             // Llenar el dropdown de carreras
@@ -56,6 +68,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             allData = alumnos;
+            totalRegistered.textContent = alumnos.length; // Total registrado desde Firebase
+            totalPresent.textContent = presentCount; // Total de presentes desde Firebase
+            totalAbsent.textContent = absentCount; // Total de ausentes desde Firebase
 
             const filterAndDisplay = () => {
                 tableBody.innerHTML = '';
@@ -74,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (filteredData.length === 0) {
                     const row = document.createElement('tr');
-                    row.innerHTML = `<td colspan="5" class="text-center">No hay datos importados.</td>`;
+                    row.innerHTML = `<td colspan="5" class="text-center">No hay usuarios registrados, cambie filtros seleccionados.</td>`;
                     tableBody.appendChild(row);
                     downloadButton.disabled = true; // Deshabilitar el botón si no hay datos
                 } else {
@@ -90,6 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         `;
                         tableBody.appendChild(row);
                     });
+
                     downloadButton.disabled = false; // Habilitar el botón si hay datos
                 }
             };
@@ -99,7 +115,65 @@ document.addEventListener('DOMContentLoaded', function() {
             filterInstitucion.addEventListener('change', filterAndDisplay);
             searchInput.addEventListener('input', filterAndDisplay);
 
-            filterAndDisplay();
+            filterAndDisplay(); // Inicializar la visualización de datos
+
+            downloadButton.addEventListener('click', async () => {
+                const wb = XLSX.utils.book_new();
+
+                // Crear una hoja de trabajo con los datos de la tabla
+                const wsData = [
+                    ["RUT", "Nombre", "Carrera", "Institución", "Estado"]
+                ];
+
+                filteredData.forEach(alumno => {
+                    wsData.push([alumno.rut, alumno.nombre, alumno.carrera, alumno.institucion, alumno.estado]);
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+                // Ajustar celdas al texto
+                const cols = [
+                    { wch: 15 },
+                    { wch: 40 },
+                    { wch: 50 },
+                    { wch: 10 },
+                    { wch: 10 }
+                ];
+                ws['!cols'] = cols;
+
+                XLSX.utils.book_append_sheet(wb, ws, "Asistencia");
+
+                // Obtener los valores de los filtros
+                const estadoFilter = filterEstado.value;
+                const carreraFilter = filterCarrera.value;
+
+                // Crear el nombre del archivo basado en los filtros seleccionados
+                const fileName = `RegistroAsistencia_${estadoFilter}_Carrera${carreraFilter}.xlsx`.replace(/ /g, '_');
+
+                // Pedir al usuario seleccionar la ubicación para guardar el archivo
+                const opts = {
+                    types: [{
+                        description: 'Excel Files',
+                        accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] },
+                    }],
+                    suggestedName: fileName,
+                };
+
+                try {
+                    const handle = await window.showSaveFilePicker(opts);
+                    const writableStream = await handle.createWritable();
+                    const workbookBlob = new Blob([XLSX.write(wb, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+                    await writableStream.write(workbookBlob);
+                    await writableStream.close();
+                } catch (err) {
+                    console.error('Error saving file:', err);
+                }
+            });
+
+            refreshButton.addEventListener('click', () => {
+                location.reload(); // Recargar la página
+            });
         } else {
             const row = document.createElement('tr');
             row.innerHTML = `<td colspan="5" class="text-center">No hay datos importados.</td>`;
@@ -107,64 +181,6 @@ document.addEventListener('DOMContentLoaded', function() {
             downloadButton.disabled = true; // Deshabilitar el botón si no hay datos
         }
     }).catch((error) => {
-        console.error(error);
-    });
-
-    refreshButton.addEventListener('click', () => {
-        location.reload();
-    });
-
-    downloadButton.addEventListener('click', async () => {
-        const wb = XLSX.utils.book_new();
-
-        // Crear una hoja de trabajo con los datos de la tabla
-        const wsData = [
-            ["RUT", "Nombre", "Carrera", "Institución", "Estado"]
-        ];
-
-        filteredData.forEach(alumno => {
-            wsData.push([alumno.rut, alumno.nombre, alumno.carrera, alumno.institucion, alumno.estado]);
-        });
-
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-        // Ajustar celdas al texto
-        const cols = [
-            { wch: 15 },
-            { wch: 40 },
-            { wch: 50 },
-            { wch: 10 },
-            { wch: 10 }
-        ];
-        ws['!cols'] = cols;
-
-        XLSX.utils.book_append_sheet(wb, ws, "Asistencia");
-
-        // Obtener los valores de los filtros
-        const estadoFilter = filterEstado.value;
-        const carreraFilter = filterCarrera.value;
-
-        // Crear el nombre del archivo basado en los filtros seleccionados
-        const fileName = `RegistroAsistencia_${estadoFilter}_Carrera${carreraFilter}.xlsx`.replace(/ /g, '_');
-
-        // Pedir al usuario seleccionar la ubicación para guardar el archivo
-        const opts = {
-            types: [{
-                description: 'Excel Files',
-                accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] },
-            }],
-            suggestedName: fileName,
-        };
-
-        try {
-            const handle = await window.showSaveFilePicker(opts);
-            const writableStream = await handle.createWritable();
-            const workbookBlob = new Blob([XLSX.write(wb, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-            await writableStream.write(workbookBlob);
-            await writableStream.close();
-        } catch (err) {
-            console.error('Error saving file:', err);
-        }
+        console.error('Error al cargar los datos:', error);
     });
 });

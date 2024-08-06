@@ -1,15 +1,40 @@
 /* styles.css */
 body {
-    font-family: Arial, sans-serif;
+    font-family: "Segoe IU", sans-serif;
     background-color: #fafafa; /* Color de fondo de la página */
     margin: 0;
     padding: 20px;
 }
 
 h1 {
-    text-align: center;
+    text-align: left;
     color: #1e1e1e; /* Color del texto del título */
-    padding: 30px; /* Ajusta el padding para las celdas */
+    padding: 30px 30px 30px 0px; /* Ajusta el padding para las celdas */
+}
+
+.totals {
+    display: flex;
+    gap: 10px;
+}
+
+.total-registered,
+.total-present,
+.total-absent {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.total-registered {
+    background-color: #f0e053; /* Amarillo */
+}
+
+.total-present {
+    background-color: #7fcc91; /* Verde claro */
+}
+
+.total-absent {
+    background-color: #e9b0b4; /* Rojo claro */
 }
 
 .table-responsive {
