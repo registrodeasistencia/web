@@ -4,7 +4,7 @@ body {
     background-color: #fafafa; /* Color de fondo de la página */
     margin: 0;
     padding: 20px;
-}
+} 
 
 h1 {
     text-align: left;
@@ -30,11 +30,11 @@ h1 {
 }
 
 .total-present {
-    background-color: #7fcc91; /* Verde claro */
+    background-color: #8fd39f; /* Verde claro */
 }
 
 .total-absent {
-    background-color: #e9b0b4; /* Rojo claro */
+    background-color: #e4a5a9; /* Rojo claro */
 }
 
 .table-responsive {
@@ -75,7 +75,7 @@ tbody tr:nth-of-type(odd) {
 }
 
 .table-hover tbody tr:hover {
-    background-color: #1b5a7fc7; /* Color al pasar el ratón */
+    background-color: #336380c4; /* Color al pasar el ratón */
     color: white; /* Color del texto */
 }
 
@@ -113,14 +113,18 @@ table {
 }
 
 .estado-presente {
-    background-color: #7fcc91; /* Verde claro */
+    background-color: #8fd39f; /* Verde claro */
 }
 
 .estado-ausente {
-    background-color: #e4999e; /* Rojo claro */
+    background-color: #e4a5a9; /* Rojo claro */
 }
 
 .table-wrapper {
     max-height: 800px; /* Ajusta la altura según sea necesario */
     overflow-y: auto; /* Permite el desplazamiento vertical */
+}
+/* Aplica el cursor de mano a los encabezados de las columnas */
+th {
+    cursor: pointer;
 }

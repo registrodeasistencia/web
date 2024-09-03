@@ -26,12 +26,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalRegistered = document.getElementById('totalRegistered');
     const totalPresent = document.getElementById('totalPresent');
     const totalAbsent = document.getElementById('totalAbsent');
-
+    
     let allData = [];
     let filteredData = [];
     let presentCount = 0;
     let absentCount = 0;
+    let sortOrder = {
+        name: true, // true for ascending, false for descending
+        carrera: true
+    };
 
+    // Cargar datos desde Firebase
     get(ref(database, 'asistenciaAlumnos')).then((snapshot) => {
         if (snapshot.exists()) {
             const carrerasSet = new Set();
@@ -51,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Llenar el dropdown de carreras
+            // Llenar el dropdown de carreras e instituciones
             carrerasSet.forEach(carrera => {
                 const option = document.createElement('option');
                 option.value = carrera;
@@ -59,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 filterCarrera.appendChild(option);
             });
 
-            // Llenar el dropdown de instituciones
             institucionesSet.forEach(institucion => {
                 const option = document.createElement('option');
                 option.value = institucion;
@@ -68,9 +72,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             allData = alumnos;
-            totalRegistered.textContent = alumnos.length; // Total registrado desde Firebase
-            totalPresent.textContent = presentCount; // Total de presentes desde Firebase
-            totalAbsent.textContent = absentCount; // Total de ausentes desde Firebase
+            totalRegistered.textContent = alumnos.length;
+            totalPresent.textContent = presentCount;
+            totalAbsent.textContent = absentCount;
 
             const filterAndDisplay = () => {
                 tableBody.innerHTML = '';
@@ -87,12 +91,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     return matchName && matchEstado && matchCarrera && matchInstitucion;
                 });
 
-                if (filteredData.length === 0) {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `<td colspan="5" class="text-center">No hay usuarios registrados, cambie filtros seleccionados.</td>`;
-                    tableBody.appendChild(row);
-                    downloadButton.disabled = true; // Deshabilitar el botón si no hay datos
-                } else {
+                sortAndDisplay(); // Ordena y muestra los datos
+            };
+
+            const sortAndDisplay = () => {
+                if (filteredData.length > 0) {
+                    tableBody.innerHTML = '';
+
                     filteredData.forEach((alumno) => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
@@ -107,8 +112,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
 
                     downloadButton.disabled = false; // Habilitar el botón si hay datos
+                } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td colspan="5" class="text-center">No hay usuarios registrados, cambie filtros seleccionados.</td>`;
+                    tableBody.appendChild(row);
+                    downloadButton.disabled = true; // Deshabilitar el botón si no hay datos
                 }
             };
+
+            const sortByColumn = (column) => {
+                filteredData.sort((a, b) => {
+                    const valueA = a[column].toLowerCase();
+                    const valueB = b[column].toLowerCase();
+                    return sortOrder[column] ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+                });
+                sortOrder[column] = !sortOrder[column]; // Toggle sort order
+                sortAndDisplay();
+            };
+            
+
+            document.getElementById('sortByName').addEventListener('click', () => sortByColumn('nombre'));
+            document.getElementById('sortByCarrera').addEventListener('click', () => sortByColumn('carrera'));
 
             filterEstado.addEventListener('change', filterAndDisplay);
             filterCarrera.addEventListener('change', filterAndDisplay);
